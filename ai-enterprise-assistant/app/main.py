@@ -1,10 +1,20 @@
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 
 from app.models import AskRequest, AskResponse
 from app.agent import run as agent_run
 from app.guardrails import check as guardrails_check
 
 app = FastAPI(title="AI Enterprise Assistant")
+
+INDEX_HTML = (Path(__file__).parent / "static" / "index.html").read_text(encoding="utf-8")
+
+
+@app.get("/")
+async def root():
+    return HTMLResponse(INDEX_HTML)
 
 
 @app.get("/health")

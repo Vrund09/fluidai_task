@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 *.pyo
+debug_*
 test_*.py
 *_out.txt
 *.log

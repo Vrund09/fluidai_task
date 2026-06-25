@@ -1,0 +1,7 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+test_*.py
+*_out.txt
+*.log

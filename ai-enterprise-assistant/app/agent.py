@@ -21,10 +21,15 @@ TOOL_FUNCTIONS = [create_ticket, get_employee_info, generate_report]
 
 MAX_RETRIES = 2
 RETRY_DELAY_SECONDS = 2
+QUOTA_RETRY_DELAY_SECONDS = 30
 
 
 def _generate_with_retry(model, contents, config):
-    """Call generate_content with retry on transient server errors."""
+    """Call generate_content with retry on transient server errors.
+
+    - 503 (UNAVAILABLE): short retry, service may recover quickly.
+    - 429 (RESOURCE_EXHAUSTED): long retry — free-tier quota resets in ~30 s.
+    """
     last_error = None
     for attempt in range(MAX_RETRIES + 1):
         try:
@@ -34,9 +39,12 @@ def _generate_with_retry(model, contents, config):
         except Exception as e:
             last_error = e
             err_str = str(e)
-            if "503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+            is_quota = "429" in err_str or "RESOURCE_EXHAUSTED" in err_str
+            is_server = "503" in err_str or "UNAVAILABLE" in err_str
+            if is_quota or is_server:
                 if attempt < MAX_RETRIES:
-                    time.sleep(RETRY_DELAY_SECONDS)
+                    delay = QUOTA_RETRY_DELAY_SECONDS if is_quota else RETRY_DELAY_SECONDS
+                    time.sleep(delay)
                     continue
             raise
     raise last_error
